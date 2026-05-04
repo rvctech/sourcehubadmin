@@ -152,7 +152,7 @@ class _StatusDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    final statuses = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(

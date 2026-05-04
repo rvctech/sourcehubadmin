@@ -48,7 +48,7 @@ class DashboardView extends ConsumerWidget {
                 child: _StatCard(
                   title: 'Orders',
                   value: ordersAsync.when(
-                    data: (orders) => orders.length.toString(),
+                    data: (orders) => orders.where((o) => o.status.toLowerCase() != 'pending').length.toString(),
                     loading: () => '...',
                     error: (error, stackTrace) => 'Error',
                   ),
@@ -93,7 +93,7 @@ class DashboardView extends ConsumerWidget {
           Card(
             child: ordersAsync.when(
               data: (orders) {
-                final recent = orders.take(5).toList();
+                final recent = orders.where((o) => o.status.toLowerCase() != 'pending').take(5).toList();
                 return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),

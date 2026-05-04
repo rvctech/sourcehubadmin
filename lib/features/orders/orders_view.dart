@@ -73,11 +73,12 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
             child: Card(
               child: ordersAsync.when(
                 data: (orders) {
-                  final filteredOrders = orders.where((o) =>
-                    o.id.toLowerCase().contains(_searchQuery) ||
-                    o.userName.toLowerCase().contains(_searchQuery) ||
-                    o.userEmail.toLowerCase().contains(_searchQuery)
-                  ).toList();
+                  final filteredOrders = orders.where((o) {
+                    final matchesSearch = o.id.toLowerCase().contains(_searchQuery) ||
+                        o.userName.toLowerCase().contains(_searchQuery) ||
+                        o.userEmail.toLowerCase().contains(_searchQuery);
+                    return matchesSearch && o.status.toLowerCase() != 'pending';
+                  }).toList();
 
                   if (filteredOrders.isEmpty) {
                     return const Center(child: Text('No orders found'));
