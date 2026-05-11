@@ -29,16 +29,23 @@ class _ProductDialogState extends State<ProductDialog> {
   late TextEditingController _imageUrlsController;
   String? _selectedCategoryId;
 
+  String _formatDouble(double? value) {
+    if (value == null) return '';
+    return value == value.truncateToDouble() 
+        ? value.toInt().toString() 
+        : value.toStringAsFixed(2);
+  }
+
   @override
   void initState() {
     super.initState();
     final p = widget.product;
     _nameController = TextEditingController(text: p?.name);
     _descController = TextEditingController(text: p?.description);
-    _priceController = TextEditingController(text: p?.price.toString());
+    _priceController = TextEditingController(text: _formatDouble(p?.price));
     _qtyController = TextEditingController(text: p?.quantity.toString());
     _locationController = TextEditingController(text: p?.location);
-    _shippingController = TextEditingController(text: p?.shippingCost?.toString());
+    _shippingController = TextEditingController(text: _formatDouble(p?.shippingCost));
     _imageUrlsController = TextEditingController(text: p?.imageUrls.join(', '));
     _selectedCategoryId = p?.categoryId ?? (widget.categories.isNotEmpty ? widget.categories.first.id : null);
   }
@@ -137,10 +144,13 @@ class _ProductDialogState extends State<ProductDialog> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
+              final productId = widget.product?.id.isNotEmpty == true
+                  ? widget.product!.id
+                  : '';
               final product = Product(
-                id: widget.product?.id ?? '',
+                id: productId,
                 name: _nameController.text,
                 description: _descController.text,
                 price: double.parse(_priceController.text),

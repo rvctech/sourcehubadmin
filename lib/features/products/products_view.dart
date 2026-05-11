@@ -12,15 +12,13 @@ class ProductsView extends ConsumerStatefulWidget {
 }
 
 class _ProductsViewState extends ConsumerState<ProductsView> {
-  String _filter = 'all'; // 'all', 'low', 'out'
+  String _filter = 'all';
 
   void _showProductDialog(BuildContext context, [Product? product]) {
-    final categories = ref.read(categoriesStreamProvider).value ?? [];
     showDialog(
       context: context,
-      builder: (context) => ProductDialog(
+      builder: (context) => _ProductDialogWrapper(
         product: product,
-        categories: categories,
         onSave: (savedProduct) async {
           final service = ref.read(firestoreServiceProvider);
           if (product == null) {
@@ -358,6 +356,42 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
     } else {
       return Text('$quantity');
     }
+  }
+}
+
+class _ProductDialogWrapper extends ConsumerWidget {
+  final Product? product;
+  final Function(Product) onSave;
+
+  const _ProductDialogWrapper({
+    this.product,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+
+    return categoriesAsync.when(
+      data: (categories) => ProductDialog(
+        product: product,
+        categories: categories,
+        onSave: onSave,
+      ),
+      loading: () => const AlertDialog(
+        content: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, stack) => AlertDialog(
+        title: const Text('Error'),
+        content: Text('Failed to load categories: $err'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
