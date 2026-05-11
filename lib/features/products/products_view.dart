@@ -24,7 +24,20 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
           if (product == null) {
             await service.addProduct(savedProduct);
           } else {
-            await service.updateProduct(savedProduct);
+            try {
+              await service.updateProduct(savedProduct);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Product updated successfully')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update: $e')),
+                );
+              }
+            }
           }
         },
       ),

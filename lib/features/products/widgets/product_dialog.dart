@@ -47,7 +47,9 @@ class _ProductDialogState extends State<ProductDialog> {
     _locationController = TextEditingController(text: p?.location);
     _shippingController = TextEditingController(text: _formatDouble(p?.shippingCost));
     _imageUrlsController = TextEditingController(text: p?.imageUrls.join(', '));
-    _selectedCategoryId = p?.categoryId ?? (widget.categories.isNotEmpty ? widget.categories.first.id : null);
+    _selectedCategoryId = (p?.categoryId != null && p!.categoryId.isNotEmpty)
+        ? p.categoryId
+        : (widget.categories.isNotEmpty ? widget.categories.first.id : null);
   }
 
   @override
@@ -146,11 +148,8 @@ class _ProductDialogState extends State<ProductDialog> {
         ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              final productId = widget.product?.id.isNotEmpty == true
-                  ? widget.product!.id
-                  : '';
               final product = Product(
-                id: productId,
+                id: widget.product != null ? widget.product!.id : '',
                 name: _nameController.text,
                 description: _descController.text,
                 price: double.parse(_priceController.text),
