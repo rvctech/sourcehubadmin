@@ -367,7 +367,21 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
         ),
       );
     } else {
-      return Text('$quantity');
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          '$quantity In Stock',
+          style: const TextStyle(
+            color: Colors.green,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
     }
   }
 }
