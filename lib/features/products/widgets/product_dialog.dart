@@ -28,6 +28,7 @@ class _ProductDialogState extends State<ProductDialog> {
   late TextEditingController _shippingController;
   late TextEditingController _imageUrlsController;
   String? _selectedCategoryId;
+  bool _featured = false;
 
   String _formatDouble(double? value) {
     if (value == null) return '';
@@ -50,6 +51,7 @@ class _ProductDialogState extends State<ProductDialog> {
     _selectedCategoryId = (p?.categoryId != null && p!.categoryId.isNotEmpty)
         ? p.categoryId
         : (widget.categories.isNotEmpty ? widget.categories.first.id : null);
+    _featured = p?.featured ?? false;
   }
 
   @override
@@ -138,6 +140,13 @@ class _ProductDialogState extends State<ProductDialog> {
                   decoration: const InputDecoration(labelText: 'Shipping Cost (Optional)'),
                   keyboardType: TextInputType.number,
                 ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Featured'),
+                  value: _featured,
+                  onChanged: (v) => setState(() => _featured = v),
+                ),
               ],
             ),
           ),
@@ -158,6 +167,7 @@ class _ProductDialogState extends State<ProductDialog> {
                 imageUrls: _imageUrlsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
                 location: _locationController.text,
                 shippingCost: double.tryParse(_shippingController.text),
+                featured: _featured,
               );
               widget.onSave(product);
               Navigator.pop(context);

@@ -15,6 +15,18 @@ class OrdersView extends ConsumerStatefulWidget {
 class _OrdersViewState extends ConsumerState<OrdersView> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  String _sortBy = 'date';
+
+  int _statusWeight(String status) {
+    switch (status.toLowerCase()) {
+      case 'confirmed': return 0;
+      case 'processing': return 1;
+      case 'shipped': return 2;
+      case 'delivered': return 3;
+      case 'cancelled': return 4;
+      default: return 5;
+    }
+  }
 
   void _showOrderDetails(OrderModel order) {
     showDialog(
@@ -68,6 +80,22 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _SortButton(
+                label: 'Date',
+                isActive: _sortBy == 'date',
+                onTap: () => setState(() => _sortBy = 'date'),
+              ),
+              const SizedBox(width: 8),
+              _SortButton(
+                label: 'Status',
+                isActive: _sortBy == 'status',
+                onTap: () => setState(() => _sortBy = 'status'),
+              ),
+            ],
+          ),
           const SizedBox(height: 24),
           Expanded(
             child: Card(
@@ -78,7 +106,14 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                         o.userName.toLowerCase().contains(_searchQuery) ||
                         o.userEmail.toLowerCase().contains(_searchQuery);
                     return matchesSearch && o.status.toLowerCase() != 'pending';
-                  }).toList();
+                  }).toList()
+                    ..sort((a, b) {
+                      if (_sortBy == 'status') {
+                        return _statusWeight(a.status)
+                            .compareTo(_statusWeight(b.status));
+                      }
+                      return b.createdAt.compareTo(a.createdAt);
+                    });
 
                   if (filteredOrders.isEmpty) {
                     return const Center(child: Text('No orders found'));
@@ -172,6 +207,38 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
         status.toUpperCase(),
         style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
       ),
+    );
+  }
+}
+
+class _SortButton extends StatelessWidget {
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _SortButton({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: isActive
+            ? const Color(0xFF1A73E8)
+            : Colors.transparent,
+        side: BorderSide(
+          color: isActive
+              ? const Color(0xFF1A73E8)
+              : Colors.black.withValues(alpha: 0.06),
+        ),
+        foregroundColor: isActive ? Colors.white : const Color(0xFF7B7F86),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+      child: Text(label),
     );
   }
 }

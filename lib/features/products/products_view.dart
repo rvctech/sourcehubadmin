@@ -137,6 +137,12 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
                     isActive: _filter == 'out',
                     onTap: () => setState(() => _filter = 'out'),
                   ),
+                  const SizedBox(width: 8),
+                  _FilterButton(
+                    label: 'Featured',
+                    isActive: _filter == 'featured',
+                    onTap: () => setState(() => _filter = 'featured'),
+                  ),
                   const SizedBox(width: 20),
                   ElevatedButton.icon(
                     onPressed: () => _showProductDialog(context),
@@ -213,8 +219,28 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
             .toList();
       case 'out':
         return products.where((p) => p.quantity == 0).toList();
+      case 'featured':
+        final featured = products.where((p) => p.featured).toList();
+        if (featured.isNotEmpty) return featured;
+        final sorted = List<Product>.from(products);
+        sorted.sort((a, b) {
+          if (a.createdAt == null && b.createdAt == null) return 0;
+          if (a.createdAt == null) return 1;
+          if (b.createdAt == null) return -1;
+          return b.createdAt!.compareTo(a.createdAt!);
+        });
+        return sorted;
       default:
-        return products;
+        final sorted = List<Product>.from(products);
+        sorted.sort((a, b) {
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+          if (a.createdAt == null && b.createdAt == null) return 0;
+          if (a.createdAt == null) return 1;
+          if (b.createdAt == null) return -1;
+          return b.createdAt!.compareTo(a.createdAt!);
+        });
+        return sorted;
     }
   }
 
@@ -231,6 +257,7 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
           columns: const [
             DataColumn(label: Text('Image')),
             DataColumn(label: Text('Name')),
+            DataColumn(label: Text('Featured')),
             DataColumn(label: Text('Price')),
             DataColumn(label: Text('Quantity')),
             DataColumn(label: Text('Location')),
@@ -305,6 +332,11 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
                     ),
                   ),
                 ),
+                DataCell(Icon(
+                  product.featured ? Icons.star : Icons.star_border,
+                  color: product.featured ? Colors.amber : Colors.grey,
+                  size: 20,
+                )),
                 DataCell(Text('KES ${product.price.toStringAsFixed(2)}')),
                 DataCell(_buildQuantityBadge(product.quantity)),
                 DataCell(Text(product.location)),

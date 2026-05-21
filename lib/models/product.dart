@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Product {
   final String id;
   final String name;
@@ -8,6 +10,8 @@ class Product {
   final List<String> imageUrls;
   final String location;
   final double? shippingCost;
+  final bool featured;
+  final DateTime? createdAt;
 
   Product({
     required this.id,
@@ -19,6 +23,8 @@ class Product {
     required this.imageUrls,
     required this.location,
     this.shippingCost,
+    this.featured = false,
+    this.createdAt,
   });
 
   factory Product.fromMap(Map<String, dynamic> map, String id) {
@@ -32,6 +38,8 @@ class Product {
       imageUrls: List<String>.from(map['imageUrls'] ?? []),
       location: map['location'] ?? '',
       shippingCost: map['shippingCost'] != null ? (map['shippingCost']).toDouble() : null,
+      featured: map['featured'] ?? false,
+      createdAt: map['createdAt'] != null ? (map['createdAt'] as Timestamp).toDate() : null,
     );
   }
 
@@ -44,6 +52,7 @@ class Product {
       'categoryId': categoryId,
       'imageUrls': imageUrls,
       'location': location,
+      'featured': featured,
       if (shippingCost != null) 'shippingCost': shippingCost,
     };
   }

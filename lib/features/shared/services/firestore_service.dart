@@ -14,7 +14,9 @@ class FirestoreService {
   }
 
   Future<void> addProduct(Product product) async {
-    await _db.collection('products').add(product.toMap());
+    final map = product.toMap();
+    map['createdAt'] = FieldValue.serverTimestamp();
+    await _db.collection('products').add(map);
   }
 
   Future<void> updateProduct(Product product) async {
