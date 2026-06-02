@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../../models/order.dart';
+import '../../../../models/product.dart';
 
 class OrderDetailsDialog extends StatefulWidget {
   final OrderModel order;
+  final List<Product> products;
   final Future<void> Function(String status) onUpdateStatus;
 
   const OrderDetailsDialog({
     super.key,
     required this.order,
+    required this.products,
     required this.onUpdateStatus,
   });
 
@@ -28,7 +31,13 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
   Widget build(BuildContext context) {
     final subtotal =
         widget.order.items.fold<double>(0, (sum, item) => sum + (item.price * item.quantity));
-    final deliveryFee = 200.0; // Placeholder or from order logic
+    final shippingByProductId = {
+      for (final p in widget.products) p.id: p.shippingCost ?? 0,
+    };
+    final deliveryFee = widget.order.items.fold<double>(
+      0,
+      (sum, item) => sum + (shippingByProductId[item.productId] ?? 0) * item.quantity,
+    );
     final total = widget.order.totalPrice;
 
     return AlertDialog(

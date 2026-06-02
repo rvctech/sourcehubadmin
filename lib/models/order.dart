@@ -9,6 +9,7 @@ class OrderModel {
   final String userPhone;
   final String userAddress;
   final double totalPrice;
+  final double shippingCost;
   final String status;
   final List<OrderItem> items;
   final String? discountCode;
@@ -23,6 +24,7 @@ class OrderModel {
     required this.userPhone,
     required this.userAddress,
     required this.totalPrice,
+    required this.shippingCost,
     required this.status,
     required this.items,
     this.discountCode,
@@ -39,11 +41,15 @@ class OrderModel {
       userPhone: map['userPhone'] ?? map['customerPhone'] ?? 'N/A',
       userAddress: map['userAddress'] ?? map['shippingAddress'] ?? 'N/A',
       totalPrice: (map['totalPrice'] ?? 0).toDouble(),
+      shippingCost: (map['shippingCost'] ?? map['shipping_cost'] ?? 0)
+          .toDouble(),
       status: map['status'] ?? 'pending',
       items: List<OrderItem>.from(
-          (map['items'] ?? []).map((x) => OrderItem.fromMap(x))),
+        (map['items'] ?? []).map((x) => OrderItem.fromMap(x)),
+      ),
       discountCode: map['discountCode'],
-      discountAmount: (map['discountAmount'] ?? map['discount'] ?? 0).toDouble(),
+      discountAmount: (map['discountAmount'] ?? map['discount'] ?? 0)
+          .toDouble(),
     );
   }
 
@@ -56,6 +62,7 @@ class OrderModel {
       'userPhone': userPhone,
       'userAddress': userAddress,
       'totalPrice': totalPrice,
+      'shippingCost': shippingCost,
       'status': status,
       'items': items.map((x) => x.toMap()).toList(),
       'discountCode': discountCode,
@@ -85,7 +92,9 @@ class OrderItem {
       name: map['name'] ?? map['productName'] ?? '',
       price: (map['price'] ?? 0).toDouble(),
       quantity: (map['quantity'] ?? map['qty'] ?? 1).toInt(),
-      imageUrls: List<String>.from(map['imageUrls'] ?? (map['product']?['imageUrls'] ?? [])),
+      imageUrls: List<String>.from(
+        map['imageUrls'] ?? (map['product']?['imageUrls'] ?? []),
+      ),
     );
   }
 

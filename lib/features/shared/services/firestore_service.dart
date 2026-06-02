@@ -85,6 +85,7 @@ class FirestoreService {
             userPhone: user['phoneNumber'] ?? user['phone'] ?? 'N/A',
             userAddress: user['address'] ?? 'N/A',
             totalPrice: order.totalPrice,
+            shippingCost: order.shippingCost,
             status: order.status,
             items: order.items,
             discountCode: order.discountCode,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../shared/services/providers.dart';
 import '../../../models/order.dart';
+import '../../../models/product.dart';
 import 'widgets/order_details_dialog.dart';
 
 class OrdersView extends ConsumerStatefulWidget {
@@ -28,11 +29,12 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     }
   }
 
-  void _showOrderDetails(OrderModel order) {
+  void _showOrderDetails(OrderModel order, List<Product> products) {
     showDialog(
       context: context,
       builder: (context) => OrderDetailsDialog(
         order: order,
+        products: products,
         onUpdateStatus: (newStatus) async {
           await ref.read(firestoreServiceProvider).updateOrderStatus(order.id, newStatus);
         },
@@ -43,6 +45,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
   @override
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(ordersStreamProvider);
+    final productsAsync = ref.watch(productsStreamProvider);
 
     return Padding(
       padding: const EdgeInsets.all(28.0),
@@ -128,26 +131,32 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
           const SizedBox(height: 24),
           Expanded(
             child: Card(
-              child: ordersAsync.when(
-                data: (orders) {
-                  final filteredOrders = orders.where((o) {
-                    final matchesSearch = o.id.toLowerCase().contains(_searchQuery) ||
-                        o.userName.toLowerCase().contains(_searchQuery) ||
-                        o.userEmail.toLowerCase().contains(_searchQuery);
-                    return matchesSearch && o.status.toLowerCase() != 'pending';
-                  }).toList()
-                    ..sort((a, b) {
-                      if (_sortBy == 'status') {
-                        return _statusWeight(a.status)
-                            .compareTo(_statusWeight(b.status));
-                      }
-                      return b.createdAt.compareTo(a.createdAt);
-                    });
+              child: productsAsync.when(
+                data: (products) {
+                  return ordersAsync.when(
+                    data: (orders) {
+                      final filteredOrders = orders.where((o) {
+                        final matchesSearch = o.id.toLowerCase().contains(_searchQuery) ||
+                            o.userName.toLowerCase().contains(_searchQuery) ||
+                            o.userEmail.toLowerCase().contains(_searchQuery);
+                        return matchesSearch && o.status.toLowerCase() != 'pending';
+                      }).toList()
+                        ..sort((a, b) {
+                          if (_sortBy == 'status') {
+                            return _statusWeight(a.status)
+                                .compareTo(_statusWeight(b.status));
+                          }
+                          return b.createdAt.compareTo(a.createdAt);
+                        });
 
-                  if (filteredOrders.isEmpty) {
-                    return const Center(child: Text('No orders found'));
-                  }
-                  return _buildOrdersTable(filteredOrders);
+                      if (filteredOrders.isEmpty) {
+                        return const Center(child: Text('No orders found'));
+                      }
+                      return _buildOrdersTable(filteredOrders, products);
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (err, stack) => Center(child: Text('Error: $err')),
+                  );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(child: Text('Error: $err')),
@@ -159,7 +168,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     );
   }
 
-  Widget _buildOrdersTable(List<OrderModel> orders) {
+  Widget _buildOrdersTable(List<OrderModel> orders, List<Product> products) {
     return SizedBox(
       width: double.infinity,
       child: DataTable(
@@ -228,7 +237,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: OutlinedButton.icon(
-                    onPressed: () => _showOrderDetails(order),
+                    onPressed: () => _showOrderDetails(order, products),
                     icon: const Icon(Icons.visibility_outlined, size: 16),
                     label: const Text('View'),
                     style: OutlinedButton.styleFrom(
