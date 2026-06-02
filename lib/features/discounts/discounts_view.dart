@@ -136,7 +136,7 @@ class _DiscountTile extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         children: [
           // Icon
@@ -213,11 +213,24 @@ class _DiscountTile extends StatelessWidget {
           // Actions
           Row(
             children: [
-              TextButton(onPressed: onEdit, child: const Text('Edit')),
-              TextButton(
+              OutlinedButton.icon(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('Edit'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
                 onPressed: onDelete,
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Delete'),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('Delete'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  foregroundColor: Colors.red,
+                  side: BorderSide(color: Colors.red.withValues(alpha: 0.8)),
+                ),
               ),
             ],
           ),

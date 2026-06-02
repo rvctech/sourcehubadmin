@@ -245,122 +245,137 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
   }
 
   Widget _buildProductsTable(List<Product> products) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(
-            Colors.grey.withValues(alpha: 0.05),
-          ),
-          horizontalMargin: 24,
-          columnSpacing: 24,
-          columns: const [
-            DataColumn(label: Text('Image')),
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('Featured')),
-            DataColumn(label: Text('Price')),
-            DataColumn(label: Text('Quantity')),
-            DataColumn(label: Text('Location')),
-            DataColumn(label: Text('Actions')),
-          ],
-          rows: products.map((product) {
-            Color? rowColor;
-            if (product.quantity == 0) {
-              rowColor = Colors.red.withValues(alpha: 0.02);
-            } else if (product.quantity <= 5) {
-              rowColor = Colors.orange.withValues(alpha: 0.02);
-            }
+    return SizedBox(
+      width: double.infinity,
+      child: DataTable(
+        headingRowColor: WidgetStateProperty.all(
+          Colors.grey.withValues(alpha: 0.05),
+        ),
+        horizontalMargin: 12,
+        columnSpacing: 12,
+        columns: const [
+          DataColumn(label: Text('Image')),
+          DataColumn(label: Text('Name')),
+          DataColumn(label: Text('Featured')),
+          DataColumn(label: Text('Price')),
+          DataColumn(label: Text('Quantity')),
+          DataColumn(label: Text('Location')),
+          DataColumn(label: Text('Actions')),
+        ],
+        rows: products.map((product) {
+          Color? rowColor;
+          if (product.quantity == 0) {
+            rowColor = Colors.red.withValues(alpha: 0.02);
+          } else if (product.quantity <= 5) {
+            rowColor = Colors.orange.withValues(alpha: 0.02);
+          }
 
-            return DataRow(
-              color: WidgetStateProperty.all(rowColor),
-              cells: [
-                DataCell(
-                  product.imageUrls.isNotEmpty
-                      ? Row(
-                          children: product.imageUrls
-                              .take(3)
-                              .map(
-                                (url) => Padding(
-                                  padding: const EdgeInsets.only(right: 4),
-                                  child: InkWell(
-                                    onTap: () =>
-                                        _showImageLightbox(context, url),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Image.network(
-                                        url,
+          return DataRow(
+            color: WidgetStateProperty.all(rowColor),
+            cells: [
+              DataCell(
+                product.imageUrls.isNotEmpty
+                    ? Row(
+                        children: product.imageUrls
+                            .take(3)
+                            .map(
+                              (url) => Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: InkWell(
+                                  onTap: () => _showImageLightbox(context, url),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.network(
+                                      url,
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stack) => Container(
                                         width: 40,
                                         height: 40,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stack) =>
-                                            Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey.withValues(
-                                                  alpha: 0.1,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: const Icon(
-                                                Icons.broken_image,
-                                                color: Colors.grey,
-                                                size: 20,
-                                              ),
-                                            ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: const Icon(
+                                          Icons.broken_image,
+                                          color: Colors.grey,
+                                          size: 20,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              )
-                              .toList(),
-                        )
-                      : const Text(
-                          'No images',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                ),
-                DataCell(
-                  SizedBox(
-                    width: 200,
-                    child: Text(
-                      product.name,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                              ),
+                            )
+                            .toList(),
+                      )
+                    : const Text(
+                        'No images',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+              ),
+              DataCell(
+                SizedBox(
+                  width: 200,
+                  child: Text(
+                    product.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                DataCell(Icon(
+              ),
+              DataCell(
+                Icon(
                   product.featured ? Icons.star : Icons.star_border,
                   color: product.featured ? Colors.amber : Colors.grey,
                   size: 20,
-                )),
-                DataCell(Text('KES ${product.price.toStringAsFixed(2)}')),
-                DataCell(_buildQuantityBadge(product.quantity)),
-                DataCell(Text(product.location)),
-                DataCell(
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: () => _showProductDialog(context, product),
-                        child: const Text('Edit'),
-                      ),
-                      TextButton(
-                        onPressed: () => _confirmDelete(context, product.id),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
                 ),
-              ],
-            );
-          }).toList(),
-        ),
+              ),
+              DataCell(Text('KES ${product.price.toStringAsFixed(2)}')),
+              DataCell(_buildQuantityBadge(product.quantity)),
+              DataCell(Text(product.location)),
+              DataCell(
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () => _showProductDialog(context, product),
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('Edit'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _confirmDelete(context, product.id),
+                      icon: const Icon(Icons.delete_outline, size: 16),
+                      label: const Text('Delete'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        foregroundColor: Colors.red,
+                        side: BorderSide(
+                          color: Colors.red.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../shared/services/providers.dart';
 
 class DashboardView extends ConsumerWidget {
@@ -16,44 +18,28 @@ class DashboardView extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Dashboard Overview',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
           ),
           const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: _StatCard(
-                  title: 'Total Revenue',
-                  value: ordersAsync.when(
-                    data: (orders) {
-                      final total = orders
-                          .where((o) => o.status == 'delivered')
-                          .fold<double>(0, (sum, item) => sum + item.totalPrice);
-                      return 'KES ${total.toStringAsFixed(0)}';
-                    },
-                    loading: () => '...',
-                    error: (error, stackTrace) => 'Error',
-                  ),
-                  icon: Icons.payments_outlined,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: _StatCard(
                   title: 'Orders',
                   value: ordersAsync.when(
-                    data: (orders) => orders.where((o) => o.status.toLowerCase() != 'pending').length.toString(),
+                    data: (orders) => orders
+                        .where((o) => o.status.toLowerCase() != 'pending')
+                        .length
+                        .toString(),
                     loading: () => '...',
                     error: (error, stackTrace) => 'Error',
                   ),
                   icon: Icons.shopping_cart_outlined,
-                  color: Colors.blue,
+                  onTap: () => context.go('/orders'),
                 ),
               ),
               const SizedBox(width: 20),
@@ -66,7 +52,7 @@ class DashboardView extends ConsumerWidget {
                     error: (error, stackTrace) => 'Error',
                   ),
                   icon: Icons.inventory_2_outlined,
-                  color: Colors.orange,
+                  onTap: () => context.go('/products'),
                 ),
               ),
               const SizedBox(width: 20),
@@ -74,37 +60,82 @@ class DashboardView extends ConsumerWidget {
                 child: _StatCard(
                   title: 'Active Coupons',
                   value: discountsAsync.when(
-                    data: (discounts) => discounts.where((d) => d.active).length.toString(),
+                    data: (discounts) =>
+                        discounts.where((d) => d.active).length.toString(),
                     loading: () => '...',
                     error: (error, stackTrace) => 'Error',
                   ),
                   icon: Icons.confirmation_num_outlined,
-                  color: Colors.purple,
+                  onTap: () => context.go('/discounts'),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 48),
-          const Text(
+          Text(
             'Recent Orders',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
           ),
           const SizedBox(height: 16),
           Card(
             child: ordersAsync.when(
               data: (orders) {
-                final recent = orders.where((o) => o.status.toLowerCase() != 'pending').take(5).toList();
+                final recentTop5 = orders
+                    .where((o) => o.status.toLowerCase() != 'pending')
+                    .toList()
+                  ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+                final top5 = recentTop5.take(5).toList();
+
                 return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: recent.length,
+                  itemCount: top5.length,
                   separatorBuilder: (context, index) => const Divider(height: 1),
                   itemBuilder: (context, index) {
-                    final order = recent[index];
+                    final order = top5[index];
+                    final statusColor = order.status.toLowerCase() == 'delivered'
+                        ? Colors.green
+                        : order.status.toLowerCase() == 'shipped'
+                            ? Colors.cyan
+                            : order.status.toLowerCase() == 'processing'
+                                ? Colors.orange
+                                : order.status.toLowerCase() == 'confirmed'
+                                    ? Colors.blue
+                                    : Colors.grey;
+
                     return ListTile(
                       title: Text(order.userName),
                       subtitle: Text(order.id),
-                      trailing: Text('KES ${order.totalPrice}'),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              order.status.toUpperCase(),
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'KES ${order.totalPrice}',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                      onTap: () => context.go('/orders'),
                     );
                   },
                 );
@@ -123,60 +154,68 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
-  final Color color;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.title,
     required this.value,
     required this.icon,
-    required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(16);
+
+    final colorScheme = theme.colorScheme;
+    final iconColor = colorScheme.primary;
+    final iconBg = colorScheme.primaryContainer;
+
+    final card = Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: radius),
+      color: theme.cardColor,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 24),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              value,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Color(0xFF7B7F86),
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
+    );
+
+    if (onTap == null) return card;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: radius,
+      child: card,
     );
   }
 }

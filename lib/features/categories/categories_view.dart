@@ -90,7 +90,7 @@ class CategoriesView extends ConsumerWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
+                            color: Colors.grey.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             image: category.imageUrl.isNotEmpty
                                 ? DecorationImage(
@@ -109,14 +109,24 @@ class CategoriesView extends ConsumerWidget {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            TextButton(
+                            OutlinedButton.icon(
                               onPressed: () => _showCategoryDialog(context, ref, category),
-                              child: const Text('Edit'),
+                              icon: const Icon(Icons.edit, size: 16),
+                              label: const Text('Edit'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              ),
                             ),
-                            TextButton(
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
                               onPressed: () => _confirmDelete(context, ref, category.id),
-                              style: TextButton.styleFrom(foregroundColor: Colors.red),
-                              child: const Text('Delete'),
+                              icon: const Icon(Icons.delete_outline, size: 16),
+                              label: const Text('Delete'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                foregroundColor: Colors.red,
+                                side: BorderSide(color: Colors.red.withValues(alpha: 0.8)),
+                              ),
                             ),
                           ],
                         ),

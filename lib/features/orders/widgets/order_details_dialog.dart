@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../models/order.dart';
 
-class OrderDetailsDialog extends StatelessWidget {
+class OrderDetailsDialog extends StatefulWidget {
   final OrderModel order;
-  final Function(String status) onUpdateStatus;
+  final Future<void> Function(String status) onUpdateStatus;
 
   const OrderDetailsDialog({
     super.key,
@@ -12,20 +12,47 @@ class OrderDetailsDialog extends StatelessWidget {
   });
 
   @override
+  State<OrderDetailsDialog> createState() => _OrderDetailsDialogState();
+}
+
+class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
+  late String _selectedStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedStatus = widget.order.status;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final subtotal = order.items.fold<double>(0, (sum, item) => sum + (item.price * item.quantity));
+    final subtotal =
+        widget.order.items.fold<double>(0, (sum, item) => sum + (item.price * item.quantity));
     final deliveryFee = 200.0; // Placeholder or from order logic
-    final total = order.totalPrice;
+    final total = widget.order.totalPrice;
 
     return AlertDialog(
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Order #${order.id.substring(0, 8)}'),
+          Text('Order #${widget.order.id.substring(0, 8)}'),
           _StatusDropdown(
-            currentStatus: order.status,
-            onChanged: (val) {
-              if (val != null) onUpdateStatus(val);
+            currentStatus: _selectedStatus,
+            onChanged: (val) async {
+              final newStatus = val;
+              if (newStatus == null) return;
+
+              final prevStatus = _selectedStatus;
+
+              setState(() => _selectedStatus = newStatus);
+
+              try {
+                // Ensure the Firestore update completes; UI already updated locally.
+                await widget.onUpdateStatus(newStatus);
+              } catch (_) {
+                // Revert UI if Firestore update fails.
+                if (mounted) setState(() => _selectedStatus = prevStatus);
+              }
             },
           ),
         ],
@@ -72,10 +99,10 @@ class OrderDetailsDialog extends StatelessWidget {
       children: [
         const Text('Customer Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
-        _InfoRow(label: 'Name', value: order.userName),
-        _InfoRow(label: 'Email', value: order.userEmail),
-        _InfoRow(label: 'Phone', value: order.userPhone),
-        _InfoRow(label: 'Address', value: order.userAddress),
+        _InfoRow(label: 'Name', value: widget.order.userName),
+        _InfoRow(label: 'Email', value: widget.order.userEmail),
+        _InfoRow(label: 'Phone', value: widget.order.userPhone),
+        _InfoRow(label: 'Address', value: widget.order.userAddress),
       ],
     );
   }
@@ -86,40 +113,44 @@ class OrderDetailsDialog extends StatelessWidget {
       children: [
         const Text('Order Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
-        ...order.items.map((item) => Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  image: item.imageUrls.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(item.imageUrls.first),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
+        ...widget.order.items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      image: item.imageUrls.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(item.imageUrls.first),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(
+                          '${item.quantity} x KES ${item.price.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'KES ${(item.price * item.quantity).toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text('${item.quantity} x KES ${item.price.toStringAsFixed(2)}', 
-                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-              ),
-              Text('KES ${(item.price * item.quantity).toStringAsFixed(2)}', 
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-            ],
-          ),
-        )),
+            )),
       ],
     );
   }
@@ -133,8 +164,12 @@ class OrderDetailsDialog extends StatelessWidget {
           children: [
             _SummaryRow(label: 'Subtotal', value: subtotal),
             _SummaryRow(label: 'Delivery Fee', value: deliveryFee),
-            if (order.discountAmount > 0)
-              _SummaryRow(label: 'Discount (${order.discountCode})', value: -order.discountAmount, color: Colors.red),
+            if (widget.order.discountAmount > 0)
+              _SummaryRow(
+                label: 'Discount (${widget.order.discountCode})',
+                value: -widget.order.discountAmount,
+                color: Colors.red,
+              ),
             const Divider(),
             _SummaryRow(label: 'Total', value: total, isBold: true, fontSize: 18),
           ],
@@ -161,11 +196,24 @@ class _StatusDropdown extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: statuses.contains(currentStatus.toLowerCase()) ? currentStatus.toLowerCase() : 'pending',
-          items: statuses.map((s) => DropdownMenuItem(
-            value: s,
-            child: Text(s.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
-          )).toList(),
+          value: statuses.contains(currentStatus.toLowerCase())
+              ? currentStatus.toLowerCase()
+              : 'pending',
+          items: statuses
+              .map(
+                (s) => DropdownMenuItem(
+                  value: s,
+                  child: Text(
+                    s.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
           onChanged: onChanged,
         ),
       ),
@@ -185,7 +233,10 @@ class _InfoRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
+          ),
           Text(value, style: const TextStyle(fontSize: 14)),
         ],
       ),
@@ -215,7 +266,13 @@ class _SummaryRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: fontSize, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
           Text(
             'KES ${value.toStringAsFixed(2)}',
             style: TextStyle(

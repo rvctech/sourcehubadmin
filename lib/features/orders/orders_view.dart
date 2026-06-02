@@ -60,21 +60,50 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 ),
               ),
               Container(
-                width: 300,
+                width: 320,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Search orders...',
-                    prefixIcon: Icon(Icons.search, size: 20),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
@@ -131,57 +160,89 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
   }
 
   Widget _buildOrdersTable(List<OrderModel> orders) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.05)),
-          horizontalMargin: 24,
-          columnSpacing: 24,
-          columns: const [
-            DataColumn(label: Text('Order ID')),
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Customer')),
-            DataColumn(label: Text('Total')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('Actions')),
-          ],
-          rows: orders.map((order) {
-            final dateStr = DateFormat('MMM d, yyyy').format(order.createdAt);
-            final timeStr = DateFormat('HH:mm').format(order.createdAt);
+    return SizedBox(
+      width: double.infinity,
+      child: DataTable(
+        headingRowColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.05)),
+        horizontalMargin: 12,
+        columnSpacing: 12,
+        columns: const [
+          DataColumn(label: Text('Order ID')),
+          DataColumn(label: Text('Date')),
+          DataColumn(label: Text('Customer')),
+          DataColumn(label: Text('Total')),
+          DataColumn(label: Text('Status')),
+          DataColumn(label: Text('Actions')),
+        ],
+        rows: orders.map((order) {
+          final dateStr = DateFormat('MMM d, yyyy').format(order.createdAt);
+          final timeStr = DateFormat('HH:mm').format(order.createdAt);
 
-            return DataRow(
-              cells: [
-                DataCell(Text(order.id.length > 8 ? '${order.id.substring(0, 8)}...' : order.id)),
-                DataCell(Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(dateStr),
-                    Text(timeStr, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                  ],
-                )),
-                DataCell(Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(order.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text(order.userEmail, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                  ],
-                )),
-                DataCell(Text('KES ${order.totalPrice.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))),
-                DataCell(_buildStatusBadge(order.status)),
-                DataCell(
-                  TextButton.icon(
+          return DataRow(
+            cells: [
+              DataCell(
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    order.id.length > 8 ? '${order.id.substring(0, 8)}...' : order.id,
+                  ),
+                ),
+              ),
+              DataCell(
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(dateStr),
+                      Text(timeStr, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ),
+              DataCell(
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(order.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text(order.userEmail, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ),
+              DataCell(
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    'KES ${order.totalPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              DataCell(_buildStatusBadge(order.status)),
+              DataCell(
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: OutlinedButton.icon(
                     onPressed: () => _showOrderDetails(order),
                     icon: const Icon(Icons.visibility_outlined, size: 16),
                     label: const Text('View'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                      side: BorderSide(color: Colors.black.withValues(alpha: 0.12)),
+                      foregroundColor: const Color(0xFF1A73E8),
+                    ),
                   ),
                 ),
-              ],
-            );
-          }).toList(),
-        ),
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -189,23 +250,40 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
   Widget _buildStatusBadge(String status) {
     Color color;
     switch (status.toLowerCase()) {
-      case 'confirmed': color = Colors.blue; break;
-      case 'processing': color = Colors.orange; break;
-      case 'shipped': color = Colors.cyan; break;
-      case 'delivered': color = Colors.green; break;
-      case 'cancelled': color = Colors.red; break;
-      default: color = Colors.grey;
+      case 'confirmed':
+        color = Colors.blue;
+        break;
+      case 'processing':
+        color = Colors.orange;
+        break;
+      case 'shipped':
+        color = Colors.cyan;
+        break;
+      case 'delivered':
+        color = Colors.green;
+        break;
+      case 'cancelled':
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.grey;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.22), width: 1),
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }

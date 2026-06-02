@@ -19,7 +19,7 @@ final router = GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          redirect: (_, __) => '/dashboard',
+          redirect: (_, state) => '/dashboard',
         ),
         GoRoute(
           path: '/dashboard',
