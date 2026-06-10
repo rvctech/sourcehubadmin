@@ -5,7 +5,7 @@ import '../../../../models/category.dart';
 class ProductDialog extends StatefulWidget {
   final Product? product;
   final List<Category> categories;
-  final Function(Product) onSave;
+  final Future<void> Function(Product) onSave;
 
   const ProductDialog({
     super.key,
@@ -98,7 +98,11 @@ class _ProductDialogState extends State<ProductDialog> {
                         controller: _priceController,
                         decoration: const InputDecoration(labelText: 'Price (KES)'),
                         keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                        validator: (v) {
+                          if (v!.isEmpty) return 'Required';
+                          if (double.tryParse(v.replaceAll(',', '')) == null) return 'Enter a valid number';
+                          return null;
+                        },
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -107,7 +111,11 @@ class _ProductDialogState extends State<ProductDialog> {
                         controller: _qtyController,
                         decoration: const InputDecoration(labelText: 'Quantity'),
                         keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                        validator: (v) {
+                          if (v!.isEmpty) return 'Required';
+                          if (int.tryParse(v.replaceAll(',', '')) == null) return 'Enter a valid whole number';
+                          return null;
+                        },
                       ),
                     ),
                   ],
@@ -139,6 +147,12 @@ class _ProductDialogState extends State<ProductDialog> {
                   controller: _shippingController,
                   decoration: const InputDecoration(labelText: 'Shipping Cost (Optional)'),
                   keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v != null && v.isNotEmpty && double.tryParse(v.replaceAll(',', '')) == null) {
+                      return 'Enter a valid number';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 8),
                 SwitchListTile(
@@ -161,16 +175,18 @@ class _ProductDialogState extends State<ProductDialog> {
                 id: widget.product != null ? widget.product!.id : '',
                 name: _nameController.text,
                 description: _descController.text,
-                price: double.parse(_priceController.text),
-                quantity: int.parse(_qtyController.text),
+                price: double.parse(_priceController.text.replaceAll(',', '')),
+                quantity: int.parse(_qtyController.text.replaceAll(',', '')),
                 categoryId: _selectedCategoryId ?? '',
                 imageUrls: _imageUrlsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
                 location: _locationController.text,
-                shippingCost: double.tryParse(_shippingController.text),
+                shippingCost: double.tryParse(_shippingController.text.replaceAll(',', '')),
                 featured: _featured,
               );
-              widget.onSave(product);
-              Navigator.pop(context);
+              await widget.onSave(product);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             }
           },
           child: const Text('Save'),

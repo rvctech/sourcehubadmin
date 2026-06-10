@@ -19,28 +19,35 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
   String _filter = 'all';
 
   void _showProductDialog(BuildContext context, [Product? product]) {
+    final pageContext = context;
     showDialog(
       context: context,
       builder: (context) => _ProductDialogWrapper(
         product: product,
         onSave: (savedProduct) async {
           final service = ref.read(firestoreServiceProvider);
-          if (product == null) {
-            await service.addProduct(savedProduct);
-          } else {
-            try {
+          try {
+            if (product == null) {
+              await service.addProduct(savedProduct);
+            } else {
               await service.updateProduct(savedProduct);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Product updated successfully')),
-                );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to update: $e')),
-                );
-              }
+            }
+            if (pageContext.mounted) {
+              ScaffoldMessenger.of(pageContext).showSnackBar(
+                SnackBar(
+                  content: Text(product == null
+                      ? 'Product added successfully'
+                      : 'Product updated successfully'),
+                ),
+              );
+            }
+          } catch (e) {
+            if (pageContext.mounted) {
+              ScaffoldMessenger.of(pageContext).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to ${product == null ? 'add' : 'update'} product: $e'),
+                ),
+              );
             }
           }
         },
@@ -244,7 +251,7 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
 
 class _ProductDialogWrapper extends ConsumerWidget {
   final Product? product;
-  final Function(Product) onSave;
+  final Future<void> Function(Product) onSave;
 
   const _ProductDialogWrapper({
     this.product,
