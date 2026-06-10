@@ -9,3 +9,12 @@
 - [x] Run `flutter analyze` and `flutter test` (if available) and visually verify light/dark mode consistency.
 - [x] Resolve any analyzer warnings reported in `analysis_report.txt`
 - [x] Rerun `flutter analyze` until clean (no warnings)
+
+---
+
+## Shipping cost tasks
+
+- [x] Update OrderModel to include shippingCost (lib/models/order.dart)
+- [x] Pass shippingCost through FirestoreService enrichment (lib/features/shared/services/firestore_service.dart)
+- [x] Remove hard-coded 200.0 and use widget.order.shippingCost in OrderDetailsDialog (lib/features/orders/widgets/order_details_dialog.dart)
+- [x] Run flutter analyze (and optionally flutter test)

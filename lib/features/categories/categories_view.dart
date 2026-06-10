@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../shared/services/providers.dart';
+import '../../core/providers.dart';
 import '../../../models/category.dart';
+import '../shared/widgets/confirm_delete_dialog.dart';
 import 'widgets/category_dialog.dart';
 
 class CategoriesView extends ConsumerWidget {
@@ -25,23 +27,11 @@ class CategoriesView extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String categoryId) {
-    showDialog(
+    showConfirmDeleteDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Category?'),
-        content: const Text('This will not delete products in this category, but they will be uncategorized.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              await ref.read(firestoreServiceProvider).deleteCategory(categoryId);
-              if (context.mounted) Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Category?',
+      message: 'This will not delete products in this category, but they will be uncategorized.',
+      onDelete: () => ref.read(firestoreServiceProvider).deleteCategory(categoryId),
     );
   }
 
@@ -94,7 +84,7 @@ class CategoriesView extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(8),
                             image: category.imageUrl.isNotEmpty
                                 ? DecorationImage(
-                                    image: NetworkImage(category.imageUrl),
+                                    image: CachedNetworkImageProvider(category.imageUrl),
                                     fit: BoxFit.cover,
                                   )
                                 : null,

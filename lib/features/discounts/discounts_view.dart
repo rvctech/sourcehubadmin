@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../shared/services/providers.dart';
+import '../../core/providers.dart';
 import '../../../models/discount.dart';
+import '../shared/widgets/confirm_delete_dialog.dart';
+import '../shared/widgets/status_badge.dart';
 import 'widgets/discount_dialog.dart';
 
 class DiscountsView extends ConsumerWidget {
@@ -25,23 +27,11 @@ class DiscountsView extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
+    showConfirmDeleteDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Discount?'),
-        content: const Text('This will permanently remove this coupon code.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              await ref.read(firestoreServiceProvider).deleteDiscount(id);
-              if (context.mounted) Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Discount?',
+      message: 'This will permanently remove this coupon code.',
+      onDelete: () => ref.read(firestoreServiceProvider).deleteDiscount(id),
     );
   }
 
@@ -122,18 +112,8 @@ class _DiscountTile extends StatelessWidget {
             ? Colors.orange
             : Colors.green;
 
-    Color statusColor;
-    String statusLabel;
-    if (isExpired) {
-      statusColor = Colors.red;
-      statusLabel = 'Expired';
-    } else if (!d.active) {
-      statusColor = Colors.grey;
-      statusLabel = 'Inactive';
-    } else {
-      statusColor = Colors.green;
-      statusLabel = 'Active';
-    }
+    final statusBadge = StatusBadge.fromDiscountStatus(expired: isExpired, active: d.active);
+    final statusColor = isExpired ? Colors.red : d.active ? Colors.green : Colors.grey;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -161,21 +141,7 @@ class _DiscountTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        statusLabel,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    statusBadge,
                   ],
                 ),
                 const SizedBox(height: 4),

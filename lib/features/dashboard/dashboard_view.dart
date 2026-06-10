@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../shared/services/providers.dart';
+import '../../core/providers.dart';
+import '../shared/widgets/status_badge.dart';
 
 class DashboardView extends ConsumerWidget {
   const DashboardView({super.key});
@@ -96,16 +97,6 @@ class DashboardView extends ConsumerWidget {
                   separatorBuilder: (context, index) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final order = top5[index];
-                    final statusColor = order.status.toLowerCase() == 'delivered'
-                        ? Colors.green
-                        : order.status.toLowerCase() == 'shipped'
-                            ? Colors.cyan
-                            : order.status.toLowerCase() == 'processing'
-                                ? Colors.orange
-                                : order.status.toLowerCase() == 'confirmed'
-                                    ? Colors.blue
-                                    : Colors.grey;
-
                     return ListTile(
                       title: Text(order.userName),
                       subtitle: Text(order.id),
@@ -113,21 +104,7 @@ class DashboardView extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              order.status.toUpperCase(),
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                          StatusBadge.fromOrderStatus(order.status),
                           const SizedBox(height: 6),
                           Text(
                             'KES ${order.totalPrice}',

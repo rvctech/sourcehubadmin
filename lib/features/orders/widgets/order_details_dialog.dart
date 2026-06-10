@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../models/order.dart';
 import '../../../../models/product.dart';
@@ -134,7 +135,7 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
                       borderRadius: BorderRadius.circular(4),
                       image: item.imageUrls.isNotEmpty
                           ? DecorationImage(
-                              image: NetworkImage(item.imageUrls.first),
+                              image: CachedNetworkImageProvider(item.imageUrls.first),
                               fit: BoxFit.cover,
                             )
                           : null,

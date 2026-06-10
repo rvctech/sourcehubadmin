@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../shared/services/providers.dart';
+import '../../core/providers.dart';
 import '../../../models/order.dart';
 import '../../../models/product.dart';
+import '../shared/widgets/filter_button.dart';
+import '../shared/widgets/status_badge.dart';
 import 'widgets/order_details_dialog.dart';
 
 class OrdersView extends ConsumerStatefulWidget {
@@ -115,13 +117,13 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
           const SizedBox(height: 16),
           Row(
             children: [
-              _SortButton(
+              FilterButton(
                 label: 'Date',
                 isActive: _sortBy == 'date',
                 onTap: () => setState(() => _sortBy = 'date'),
               ),
               const SizedBox(width: 8),
-              _SortButton(
+              FilterButton(
                 label: 'Status',
                 isActive: _sortBy == 'status',
                 onTap: () => setState(() => _sortBy = 'status'),
@@ -131,35 +133,37 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
           const SizedBox(height: 24),
           Expanded(
             child: Card(
-              child: productsAsync.when(
-                data: (products) {
-                  return ordersAsync.when(
-                    data: (orders) {
-                      final filteredOrders = orders.where((o) {
-                        final matchesSearch = o.id.toLowerCase().contains(_searchQuery) ||
-                            o.userName.toLowerCase().contains(_searchQuery) ||
-                            o.userEmail.toLowerCase().contains(_searchQuery);
-                        return matchesSearch && o.status.toLowerCase() != 'pending';
-                      }).toList()
-                        ..sort((a, b) {
-                          if (_sortBy == 'status') {
-                            return _statusWeight(a.status)
-                                .compareTo(_statusWeight(b.status));
-                          }
-                          return b.createdAt.compareTo(a.createdAt);
-                        });
+              child: ClipRect(
+                child: productsAsync.when(
+                  data: (products) {
+                    return ordersAsync.when(
+                      data: (orders) {
+                        final filteredOrders = orders.where((o) {
+                          final matchesSearch = o.id.toLowerCase().contains(_searchQuery) ||
+                              o.userName.toLowerCase().contains(_searchQuery) ||
+                              o.userEmail.toLowerCase().contains(_searchQuery);
+                          return matchesSearch && o.status.toLowerCase() != 'pending';
+                        }).toList()
+                          ..sort((a, b) {
+                            if (_sortBy == 'status') {
+                              return _statusWeight(a.status)
+                                  .compareTo(_statusWeight(b.status));
+                            }
+                            return b.createdAt.compareTo(a.createdAt);
+                          });
 
-                      if (filteredOrders.isEmpty) {
-                        return const Center(child: Text('No orders found'));
-                      }
-                      return _buildOrdersTable(filteredOrders, products);
-                    },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) => Center(child: Text('Error: $err')),
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(child: Text('Error: $err')),
+                        if (filteredOrders.isEmpty) {
+                          return const Center(child: Text('No orders found'));
+                        }
+                        return _buildOrdersTable(filteredOrders, products);
+                      },
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (err, stack) => Center(child: Text('Error: $err')),
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('Error: $err')),
+                ),
               ),
             ),
           ),
@@ -169,9 +173,11 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
   }
 
   Widget _buildOrdersTable(List<OrderModel> orders, List<Product> products) {
-    return SizedBox(
-      width: double.infinity,
-      child: DataTable(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: SizedBox(
+        width: double.infinity,
+        child: DataTable(
         headingRowColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.05)),
         horizontalMargin: 12,
         columnSpacing: 12,
@@ -189,143 +195,47 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
 
           return DataRow(
             cells: [
-              DataCell(
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    order.id.length > 8 ? '${order.id.substring(0, 8)}...' : order.id,
-                  ),
+              DataCell(Text(
+                order.id.length > 8 ? '${order.id.substring(0, 8)}...' : order.id,
+              )),
+              DataCell(Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(dateStr),
+                  Text(timeStr, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                ],
+              )),
+              DataCell(Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(order.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(order.userEmail, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                ],
+              )),
+              DataCell(Text(
+                'KES ${order.totalPrice.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              )),
+              DataCell(StatusBadge.fromOrderStatus(order.status)),
+              DataCell(OutlinedButton.icon(
+                onPressed: () => _showOrderDetails(order, products),
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('View'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                  side: BorderSide(color: Colors.black.withValues(alpha: 0.12)),
+                  foregroundColor: const Color(0xFF1A73E8),
                 ),
-              ),
-              DataCell(
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(dateStr),
-                      Text(timeStr, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ),
-              DataCell(
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(order.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text(order.userEmail, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ),
-              DataCell(
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    'KES ${order.totalPrice.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              DataCell(_buildStatusBadge(order.status)),
-              DataCell(
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showOrderDetails(order, products),
-                    icon: const Icon(Icons.visibility_outlined, size: 16),
-                    label: const Text('View'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-                      side: BorderSide(color: Colors.black.withValues(alpha: 0.12)),
-                      foregroundColor: const Color(0xFF1A73E8),
-                    ),
-                  ),
-                ),
-              ),
+              )),
             ],
           );
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color color;
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        color = Colors.blue;
-        break;
-      case 'processing':
-        color = Colors.orange;
-        break;
-      case 'shipped':
-        color = Colors.cyan;
-        break;
-      case 'delivered':
-        color = Colors.green;
-        break;
-      case 'cancelled':
-        color = Colors.red;
-        break;
-      default:
-        color = Colors.grey;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.22), width: 1),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
         ),
       ),
     );
   }
-}
 
-class _SortButton extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _SortButton({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        backgroundColor: isActive
-            ? const Color(0xFF1A73E8)
-            : Colors.transparent,
-        side: BorderSide(
-          color: isActive
-              ? const Color(0xFF1A73E8)
-              : Colors.black.withValues(alpha: 0.06),
-        ),
-        foregroundColor: isActive ? Colors.white : const Color(0xFF7B7F86),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      ),
-      child: Text(label),
-    );
-  }
 }
