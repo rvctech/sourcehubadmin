@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme.dart';
 import '../shared/services/auth_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -49,7 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1A73E8), Color(0xFF0D47A1)],
+            colors: [AppTheme.primarySeedColor, AppTheme.darkModeSeedColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -79,17 +80,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A73E8),
+                      color: AppTheme.primarySeedColor,
                     ),
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Center(
+                Center(
                   child: Text(
                     'Source Hub Africa',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       letterSpacing: 1.2,
                     ),
                   ),

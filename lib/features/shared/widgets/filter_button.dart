@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme.dart';
 
 class FilterButton extends StatelessWidget {
   final String label;
@@ -17,11 +18,11 @@ class FilterButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        backgroundColor: isActive ? const Color(0xFF1A73E8) : Colors.transparent,
+        backgroundColor: isActive ? AppTheme.primarySeedColor : Colors.transparent,
         side: BorderSide(
-          color: isActive ? const Color(0xFF1A73E8) : Colors.black.withValues(alpha: 0.06),
+          color: isActive ? AppTheme.primarySeedColor : Colors.black.withValues(alpha: 0.06),
         ),
-        foregroundColor: isActive ? Colors.white : const Color(0xFF7B7F86),
+        foregroundColor: isActive ? Colors.white : AppTheme.mutedColor,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
       child: Text(label),

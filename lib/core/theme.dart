@@ -14,7 +14,9 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
 
 class AppTheme {
-  static const primaryColor = Color(0xFF1A73E8);
+  static const Color primarySeedColor = Color(0xFF845ec2);
+  static const Color darkModeSeedColor = Color(0xFF6B21A8);
+  static const primaryColor = primarySeedColor;
   static const backgroundColor = Color(0xFFF5F7FA);
   static const cardColor = Colors.white;
   static const mutedColor = Color(0xFF7B7F86);
@@ -22,7 +24,7 @@ class AppTheme {
 
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: primaryColor,
+      seedColor: primarySeedColor,
       primary: primaryColor,
       surface: cardColor,
       brightness: Brightness.light,
@@ -73,7 +75,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -115,7 +117,7 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: primaryColor,
+      seedColor: darkModeSeedColor,
       primary: primaryColor,
       brightness: Brightness.dark,
     );
@@ -165,7 +167,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

@@ -147,7 +147,7 @@ class _DiscountTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${d.type == 'fixed' ? 'KES ${d.amount.toStringAsFixed(0)}' : '${d.amount.toStringAsFixed(0)}%'} discount',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 8),
                 // Usage progress bar
@@ -156,7 +156,7 @@ class _DiscountTile extends StatelessWidget {
                     Expanded(
                       child: LinearProgressIndicator(
                         value: progress,
-                        backgroundColor: Colors.grey[200],
+                        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                         color: progressColor,
                         minHeight: 6,
                         borderRadius: BorderRadius.circular(4),
@@ -167,7 +167,7 @@ class _DiscountTile extends StatelessWidget {
                       '${d.uses} / ${d.maxUses} uses',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isExpired ? Colors.red : Colors.grey[600],
+                        color: isExpired ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -194,8 +194,8 @@ class _DiscountTile extends StatelessWidget {
                 label: const Text('Delete'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  foregroundColor: Colors.red,
-                  side: BorderSide(color: Colors.red.withValues(alpha: 0.8)),
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                  side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.8)),
                 ),
               ),
             ],

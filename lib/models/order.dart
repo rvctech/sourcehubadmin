@@ -98,10 +98,19 @@ class OrderItem {
       name: map['name'] ?? map['productName'] ?? '',
       price: (map['price'] ?? 0).toDouble(),
       quantity: (map['quantity'] ?? map['qty'] ?? 1).toInt(),
-      imageUrls: List<String>.from(
-        map['imageUrls'] ?? (map['product']?['imageUrls'] ?? []),
-      ),
+      imageUrls: _parseImageUrls(map),
     );
+  }
+
+  static List<String> _parseImageUrls(Map<String, dynamic> map) {
+    if (map['imageUrls'] is List) return List<String>.from(map['imageUrls']);
+    if (map['product'] is Map && (map['product'] as Map)['imageUrls'] is List) {
+      return List<String>.from((map['product'] as Map)['imageUrls']);
+    }
+    if (map['imageUrl'] is String && (map['imageUrl'] as String).isNotEmpty) {
+      return [map['imageUrl'] as String];
+    }
+    return [];
   }
 
   Map<String, dynamic> toMap() {

@@ -7,12 +7,20 @@ class OrderDetailsDialog extends StatefulWidget {
   final OrderModel order;
   final List<Product> products;
   final Future<void> Function(String status) onUpdateStatus;
+  final String? userName;
+  final String? userEmail;
+  final String? userPhone;
+  final String? userAddress;
 
   const OrderDetailsDialog({
     super.key,
     required this.order,
     required this.products,
     required this.onUpdateStatus,
+    this.userName,
+    this.userEmail,
+    this.userPhone,
+    this.userAddress,
   });
 
   @override
@@ -103,16 +111,21 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
     );
   }
 
+  String get _displayName => widget.order.userName != 'N/A' ? widget.order.userName : (widget.userName ?? 'N/A');
+  String get _displayEmail => widget.order.userEmail != 'N/A' ? widget.order.userEmail : (widget.userEmail ?? 'N/A');
+  String get _displayPhone => widget.order.userPhone != 'N/A' ? widget.order.userPhone : (widget.userPhone ?? 'N/A');
+  String get _displayAddress => widget.order.userAddress != 'N/A' ? widget.order.userAddress : (widget.userAddress ?? 'N/A');
+
   Widget _buildCustomerInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Customer Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
-        _InfoRow(label: 'Name', value: widget.order.userName),
-        _InfoRow(label: 'Email', value: widget.order.userEmail),
-        _InfoRow(label: 'Phone', value: widget.order.userPhone),
-        _InfoRow(label: 'Address', value: widget.order.userAddress),
+        _InfoRow(label: 'Name', value: _displayName),
+        _InfoRow(label: 'Email', value: _displayEmail),
+        _InfoRow(label: 'Phone', value: _displayPhone),
+        _InfoRow(label: 'Address', value: _displayAddress),
       ],
     );
   }
@@ -123,7 +136,12 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
       children: [
         const Text('Order Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
-        ...widget.order.items.map((item) => Padding(
+        ...widget.order.items.map((item) {
+          final product = widget.products.where((p) => p.id == item.productId).firstOrNull;
+          final imageUrl = item.imageUrls.isNotEmpty
+              ? item.imageUrls.first
+              : (product?.imageUrls.isNotEmpty == true ? product!.imageUrls.first : null);
+          return Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Row(
                 children: [
@@ -133,9 +151,9 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
                     decoration: BoxDecoration(
                       color: Colors.grey.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
-                      image: item.imageUrls.isNotEmpty
+                      image: imageUrl != null
                           ? DecorationImage(
-                              image: CachedNetworkImageProvider(item.imageUrls.first),
+                              image: CachedNetworkImageProvider(imageUrl),
                               fit: BoxFit.cover,
                             )
                           : null,
@@ -149,7 +167,7 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
                         Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                         Text(
                           '${item.quantity} x KES ${item.price.toStringAsFixed(2)}',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -160,7 +178,8 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
                   ),
                 ],
               ),
-            )),
+            );
+          }),
       ],
     );
   }
@@ -178,7 +197,7 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
               _SummaryRow(
                 label: 'Discount (${widget.order.discountCode})',
                 value: -widget.order.discountAmount,
-                color: Colors.red,
+                color: Theme.of(context).colorScheme.error,
               ),
             const Divider(),
             _SummaryRow(label: 'Total', value: total, isBold: true, fontSize: 18),
@@ -215,10 +234,10 @@ class _StatusDropdown extends StatelessWidget {
                   value: s,
                   child: Text(
                     s.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
@@ -245,7 +264,7 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold),
           ),
           Text(value, style: const TextStyle(fontSize: 14)),
         ],

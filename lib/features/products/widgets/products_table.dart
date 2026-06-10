@@ -69,7 +69,7 @@ class ProductsTable extends StatelessWidget {
                                               color: Colors.grey.withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(6),
                                             ),
-                                            child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
+                                            child: Icon(Icons.broken_image, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
                                           ),
                                         ),
                                       ),
@@ -77,7 +77,7 @@ class ProductsTable extends StatelessWidget {
                                   ))
                               .toList(),
                         )
-                      : const Text('No images', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      : Text('No images', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
                 ),
                 DataCell(SizedBox(
                   width: 200,
@@ -90,7 +90,7 @@ class ProductsTable extends StatelessWidget {
                 )),
                 DataCell(Icon(
                   product.featured ? Icons.star : Icons.star_border,
-                  color: product.featured ? Colors.amber : Colors.grey,
+                  color: product.featured ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
                   size: 20,
                 )),
                 DataCell(Text('KES ${product.price.toStringAsFixed(2)}')),
@@ -113,8 +113,8 @@ class ProductsTable extends StatelessWidget {
                       label: const Text('Delete'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        foregroundColor: Colors.red,
-                        side: BorderSide(color: Colors.red.withValues(alpha: 0.8)),
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                        side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.8)),
                       ),
                     ),
                   ],

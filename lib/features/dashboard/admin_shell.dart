@@ -37,7 +37,7 @@ class AdminShell extends ConsumerWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A73E8),
+                          color: AppTheme.primarySeedColor,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Center(
@@ -129,7 +129,7 @@ class AdminShell extends ConsumerWidget {
           // Main Content
           Expanded(
             child: Container(
-              color: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+              color: isDark ? const Color(0xFF121212) : AppTheme.backgroundColor,
               child: child,
             ),
           ),
@@ -155,8 +155,8 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = isDark ? const Color(0xFF9E9E9E) : const Color(0xFF7B7F86);
-    final activeColor = const Color(0xFF1A73E8);
+    final mutedColor = isDark ? const Color(0xFF9E9E9E) : AppTheme.mutedColor;
+    final activeColor = AppTheme.primarySeedColor;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

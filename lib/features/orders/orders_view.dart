@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/providers.dart';
 import '../../../models/order.dart';
 import '../../../models/product.dart';
+import '../../core/theme.dart' show AppTheme;
 import '../shared/widgets/filter_button.dart';
 import '../shared/widgets/status_badge.dart';
 import 'widgets/order_details_dialog.dart';
@@ -31,12 +32,18 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     }
   }
 
-  void _showOrderDetails(OrderModel order, List<Product> products) {
+  Future<void> _showOrderDetails(OrderModel order, List<Product> products) async {
+    final userData = await ref.read(firestoreServiceProvider).getUserData(order.userId);
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (context) => OrderDetailsDialog(
         order: order,
         products: products,
+        userName: userData?['displayName'] as String?,
+        userEmail: userData?['email'] as String?,
+        userPhone: userData?['phoneNumber'] as String?,
+        userAddress: userData?['address'] as String?,
         onUpdateStatus: (newStatus) async {
           await ref.read(firestoreServiceProvider).updateOrderStatus(order.id, newStatus);
         },
@@ -203,7 +210,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(dateStr),
-                  Text(timeStr, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(timeStr, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 ],
               )),
               DataCell(Column(
@@ -211,7 +218,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(order.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(order.userEmail, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                  Text(order.userEmail, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 ],
               )),
               DataCell(Text(
@@ -227,7 +234,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
                   side: BorderSide(color: Colors.black.withValues(alpha: 0.12)),
-                  foregroundColor: const Color(0xFF1A73E8),
+                  foregroundColor: AppTheme.primarySeedColor,
                 ),
               )),
             ],

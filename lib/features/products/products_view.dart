@@ -182,22 +182,22 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
       children: [
         Text(
           '$total products',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        const Text(' • ', style: TextStyle(color: Colors.grey)),
+        Text(' • ', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
         Text('$inStock in stock', style: const TextStyle(color: Colors.green)),
         if (lowStock > 0) ...[
-          const Text(' • ', style: TextStyle(color: Colors.grey)),
+          Text(' • ', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           Text(
             '$lowStock low stock',
             style: const TextStyle(color: Colors.orange),
           ),
         ],
         if (outOfStock > 0) ...[
-          const Text(' • ', style: TextStyle(color: Colors.grey)),
+          Text(' • ', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           Text(
             '$outOfStock out of stock',
             style: const TextStyle(color: Colors.red),

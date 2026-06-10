@@ -21,7 +21,7 @@ Future<void> showConfirmDeleteDialog({
             await onDelete();
             if (context.mounted) Navigator.pop(context);
           },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
           child: const Text('Delete'),
         ),
       ],

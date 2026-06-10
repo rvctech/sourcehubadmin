@@ -114,8 +114,8 @@ class CategoriesView extends ConsumerWidget {
                               label: const Text('Delete'),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                foregroundColor: Colors.red,
-                                side: BorderSide(color: Colors.red.withValues(alpha: 0.8)),
+                                foregroundColor: Theme.of(context).colorScheme.error,
+                                side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.8)),
                               ),
                             ),
                           ],
