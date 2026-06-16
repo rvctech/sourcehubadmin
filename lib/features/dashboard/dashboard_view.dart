@@ -13,6 +13,7 @@ class DashboardView extends ConsumerWidget {
     final productsAsync = ref.watch(productsStreamProvider);
     final ordersAsync = ref.watch(ordersStreamProvider);
     final discountsAsync = ref.watch(discountsStreamProvider);
+    final usersMapAsync = ref.watch(usersMapProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(28.0),
@@ -97,8 +98,10 @@ class DashboardView extends ConsumerWidget {
                   separatorBuilder: (context, index) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final order = top5[index];
+                    final userData = usersMapAsync.asData?.value[order.userId];
+                    final displayName = (userData?['displayName'] as String?)?.trim() ?? order.userName;
                     return ListTile(
-                      title: Text(order.userName),
+                      title: Text(displayName),
                       subtitle: Text(order.id),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

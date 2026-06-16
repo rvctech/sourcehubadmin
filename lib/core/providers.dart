@@ -17,6 +17,10 @@ final ordersStreamProvider = StreamProvider((ref) {
   return ref.watch(firestoreServiceProvider).getOrders();
 });
 
+final usersMapProvider = StreamProvider<Map<String, Map<String, dynamic>>>((ref) {
+  return ref.watch(firestoreServiceProvider).getAllUsersStream();
+});
+
 final discountsStreamProvider = StreamProvider((ref) {
   return ref.watch(firestoreServiceProvider).getDiscounts();
 });

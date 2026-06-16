@@ -111,7 +111,7 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
     );
   }
 
-  String get _displayName => widget.order.userName != 'N/A' ? widget.order.userName : (widget.userName ?? 'N/A');
+  String get _displayName => (widget.order.userName.isNotEmpty && widget.order.userName != 'N/A') ? widget.order.userName : (widget.userName ?? 'N/A');
   String get _displayEmail => widget.order.userEmail != 'N/A' ? widget.order.userEmail : (widget.userEmail ?? 'N/A');
   String get _displayPhone => widget.order.userPhone != 'N/A' ? widget.order.userPhone : (widget.userPhone ?? 'N/A');
   String get _displayAddress => widget.order.userAddress != 'N/A' ? widget.order.userAddress : (widget.userAddress ?? 'N/A');

@@ -51,6 +51,16 @@ class FirestoreService {
     return doc.data();
   }
 
+  Stream<Map<String, Map<String, dynamic>>> getAllUsersStream() {
+    return _db.collection('users').snapshots().map((snapshot) {
+      final map = <String, Map<String, dynamic>>{};
+      for (final doc in snapshot.docs) {
+        map[doc.id] = doc.data();
+      }
+      return map;
+    });
+  }
+
   // --- Orders ---
   Stream<List<OrderModel>> getOrders() {
     return _db

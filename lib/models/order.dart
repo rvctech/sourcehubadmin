@@ -31,10 +31,11 @@ class OrderModel {
     this.discountAmount = 0,
   });
 
-  static String _fullName(dynamic firstName, dynamic lastName) {
+  static String? _fullName(dynamic firstName, dynamic lastName) {
     final f = firstName?.toString() ?? '';
     final l = lastName?.toString() ?? '';
-    return '$f $l'.trim();
+    final name = '$f $l'.trim();
+    return name.isEmpty ? null : name;
   }
 
   factory OrderModel.fromMap(Map<String, dynamic> map, String id) {
@@ -42,7 +43,7 @@ class OrderModel {
       id: id,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       userId: map['userId'] ?? '',
-      userName: map['userName'] ?? map['customerName'] ?? _fullName(map['firstName'], map['lastName']),
+      userName: map['userName'] ?? map['customerName'] ?? _fullName(map['firstName'], map['lastName']) ?? 'N/A',
       userEmail: map['userEmail'] ?? map['customerEmail'] ?? map['email'] ?? 'N/A',
       userPhone: map['userPhone'] ?? map['customerPhone'] ?? map['phoneNumber'] ?? 'N/A',
       userAddress: map['userAddress'] ?? map['shippingAddress'] ?? 'N/A',

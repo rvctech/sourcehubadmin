@@ -55,6 +55,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(ordersStreamProvider);
     final productsAsync = ref.watch(productsStreamProvider);
+    final usersMapAsync = ref.watch(usersMapProvider);
 
     return Padding(
       padding: const EdgeInsets.all(28.0),
@@ -145,10 +146,14 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                   data: (products) {
                     return ordersAsync.when(
                       data: (orders) {
+                        final usersMap = usersMapAsync.asData?.value ?? {};
                         final filteredOrders = orders.where((o) {
+                          final u = usersMap[o.userId];
+                          final name = (u?['displayName'] as String?)?.toLowerCase() ?? o.userName.toLowerCase();
+                          final email = (u?['email'] as String?)?.toLowerCase() ?? o.userEmail.toLowerCase();
                           final matchesSearch = o.id.toLowerCase().contains(_searchQuery) ||
-                              o.userName.toLowerCase().contains(_searchQuery) ||
-                              o.userEmail.toLowerCase().contains(_searchQuery);
+                              name.contains(_searchQuery) ||
+                              email.contains(_searchQuery);
                           return matchesSearch && o.status.toLowerCase() != 'pending';
                         }).toList()
                           ..sort((a, b) {
@@ -162,7 +167,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                         if (filteredOrders.isEmpty) {
                           return const Center(child: Text('No orders found'));
                         }
-                        return _buildOrdersTable(filteredOrders, products);
+                        return _buildOrdersTable(filteredOrders, products, usersMapAsync);
                       },
                       loading: () => const Center(child: CircularProgressIndicator()),
                       error: (err, stack) => Center(child: Text('Error: $err')),
@@ -179,7 +184,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     );
   }
 
-  Widget _buildOrdersTable(List<OrderModel> orders, List<Product> products) {
+  Widget _buildOrdersTable(List<OrderModel> orders, List<Product> products, AsyncValue<Map<String, Map<String, dynamic>>> usersMapAsync) {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 2),
       child: SizedBox(
@@ -199,6 +204,9 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
         rows: orders.map((order) {
           final dateStr = DateFormat('MMM d, yyyy').format(order.createdAt);
           final timeStr = DateFormat('HH:mm').format(order.createdAt);
+          final userData = usersMapAsync.asData?.value[order.userId];
+          final displayName = (userData?['displayName'] as String?)?.trim();
+          final displayEmail = (userData?['email'] as String?)?.trim();
 
           return DataRow(
             cells: [
@@ -217,8 +225,14 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(order.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(order.userEmail, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Text(
+                    displayName ?? order.userName,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    displayEmail ?? order.userEmail,
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
                 ],
               )),
               DataCell(Text(
