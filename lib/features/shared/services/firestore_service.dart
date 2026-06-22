@@ -83,7 +83,35 @@ class FirestoreService {
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
-    await _db.collection('orders').doc(orderId).update({'status': status});
+    if (status.toLowerCase() == 'cancelled') {
+      await _db.runTransaction((transaction) async {
+        final orderRef = _db.collection('orders').doc(orderId);
+        final snapshot = await transaction.get(orderRef);
+        if (!snapshot.exists) return;
+
+        final rawData = snapshot.data() as Map<String, dynamic>;
+        final currentStatus = rawData['status'] as String? ?? '';
+        final stockDeducted = {'confirmed', 'processing', 'packing', 'shipped', 'intransit', 'delivered'};
+
+        if (stockDeducted.contains(currentStatus.toLowerCase())) {
+          final items = rawData['items'] as List<dynamic>? ?? [];
+          for (final rawItem in items) {
+            final item = rawItem as Map<String, dynamic>;
+            final productId = item['productId'] as String?;
+            final quantity = item['quantity'] as int? ?? 0;
+            if (productId == null || quantity < 1) continue;
+            transaction.update(
+              _db.collection('products').doc(productId),
+              {'quantity': FieldValue.increment(quantity)},
+            );
+          }
+        }
+
+        transaction.update(orderRef, {'status': status});
+      });
+    } else {
+      await _db.collection('orders').doc(orderId).update({'status': status});
+    }
   }
 
   Future<void> markShippingCollected(String orderId, String adminUid) async {
