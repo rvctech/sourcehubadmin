@@ -51,31 +51,47 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
       (sum, item) => sum + (shippingByProductId[item.productId] ?? 0) * item.quantity,
     );
     final total = widget.order.totalPrice;
+    final isTerminal = ['cancelled', 'failed'].contains(widget.order.status.toLowerCase());
 
     return AlertDialog(
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Order #${widget.order.id.substring(0, 8)}'),
-          _StatusDropdown(
-            currentStatus: _selectedStatus,
-            onChanged: (val) async {
-              final newStatus = val;
-              if (newStatus == null) return;
+          if (isTerminal)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.red.withAlpha(20),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                widget.order.status.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade700,
+                ),
+              ),
+            )
+          else
+            _StatusDropdown(
+              currentStatus: _selectedStatus,
+              onChanged: (val) async {
+                final newStatus = val;
+                if (newStatus == null) return;
 
-              final prevStatus = _selectedStatus;
+                final prevStatus = _selectedStatus;
 
-              setState(() => _selectedStatus = newStatus);
+                setState(() => _selectedStatus = newStatus);
 
-              try {
-                // Ensure the Firestore update completes; UI already updated locally.
-                await widget.onUpdateStatus(newStatus);
-              } catch (_) {
-                // Revert UI if Firestore update fails.
-                if (mounted) setState(() => _selectedStatus = prevStatus);
-              }
-            },
-          ),
+                try {
+                  await widget.onUpdateStatus(newStatus);
+                } catch (_) {
+                  if (mounted) setState(() => _selectedStatus = prevStatus);
+                }
+              },
+            ),
         ],
       ),
       content: SizedBox(
