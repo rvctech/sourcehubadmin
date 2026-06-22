@@ -71,6 +71,17 @@ class FirestoreService {
             snapshot.docs.map((doc) => OrderModel.fromMap(doc.data(), doc.id)).toList());
   }
 
+  Future<List<OrderModel>> getOrdersByPaymentGroupId(String paymentGroupId) async {
+    final snapshot = await _db
+        .collection('orders')
+        .where('paymentGroupId', isEqualTo: paymentGroupId)
+        .where('status', isNotEqualTo: 'pending')
+        .get();
+    return snapshot.docs
+        .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+        .toList();
+  }
+
   Future<void> updateOrderStatus(String orderId, String status) async {
     await _db.collection('orders').doc(orderId).update({'status': status});
   }

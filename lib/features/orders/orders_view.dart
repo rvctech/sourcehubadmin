@@ -34,6 +34,16 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     }
   }
 
+  String? _resolveEmail(String? fromUsers, String fromOrder) {
+    if (fromUsers != null && fromUsers.isNotEmpty) return fromUsers;
+    if (fromOrder.isNotEmpty && fromOrder != 'N/A') return fromOrder;
+    return null;
+  }
+
+  String _clean(String value) {
+    return value == 'N/A' || value.isEmpty ? '-' : value;
+  }
+
   Future<void> _showOrderDetails(OrderModel order, List<Product> products) async {
     final userData = await ref.read(firestoreServiceProvider).getUserData(order.userId);
     if (!mounted) return;
@@ -239,6 +249,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
           DataColumn(label: Text('Total')),
           DataColumn(label: Text('Shipping')),
           DataColumn(label: Text('Status')),
+          DataColumn(label: Text('Group')),
           DataColumn(label: Text('Actions')),
         ],
         rows: orders.map((order) {
@@ -247,6 +258,9 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
           final userData = usersMapAsync.asData?.value[order.userId];
           final displayName = (userData?['displayName'] as String?)?.trim();
           final displayEmail = (userData?['email'] as String?)?.trim();
+          final email = _resolveEmail(displayEmail, order.userEmail);
+
+          final isGrouped = order.paymentGroupId != null && order.paymentGroupId != order.id;
 
           return DataRow(
             cells: [
@@ -266,13 +280,14 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    displayName ?? order.userName,
+                    displayName ?? _clean(order.userName),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  Text(
-                    displayEmail ?? order.userEmail,
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  ),
+                  if (email != null)
+                    Text(
+                      email,
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ),
                 ],
               )),
               DataCell(Text(
@@ -284,6 +299,12 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 collected: order.shippingCollected,
               )),
               DataCell(StatusBadge.fromOrderStatus(order.status)),
+              DataCell(isGrouped
+                  ? Tooltip(
+                      message: 'Part of a split payment group',
+                      child: Icon(Icons.link, size: 18, color: Theme.of(context).colorScheme.primary),
+                    )
+                  : const Text('')),
               DataCell(OutlinedButton.icon(
                 onPressed: () => _showOrderDetails(order, products),
                 icon: const Icon(Icons.visibility_outlined, size: 16),

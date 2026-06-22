@@ -116,10 +116,17 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
     );
   }
 
-  String get _displayName => (widget.order.userName.isNotEmpty && widget.order.userName != 'N/A') ? widget.order.userName : (widget.userName ?? 'N/A');
-  String get _displayEmail => widget.order.userEmail != 'N/A' ? widget.order.userEmail : (widget.userEmail ?? 'N/A');
-  String get _displayPhone => widget.order.userPhone != 'N/A' ? widget.order.userPhone : (widget.userPhone ?? 'N/A');
-  String get _displayAddress => widget.order.userAddress != 'N/A' ? widget.order.userAddress : (widget.userAddress ?? 'N/A');
+  String? _clean(String? fromOrder, String? fromUser) {
+    final val = (fromOrder?.isNotEmpty == true && fromOrder != 'N/A') ? fromOrder : fromUser;
+    return (val?.isNotEmpty == true && val != 'N/A') ? val : null;
+  }
+
+  String get _displayName => _clean(widget.order.userName, widget.userName) ?? '-';
+  String? get _displayEmail => _clean(widget.order.userEmail, widget.userEmail);
+  String get _displayPhone => _clean(widget.order.userPhone, widget.userPhone) ?? '-';
+  String get _displayAddress => _clean(widget.order.userAddress, widget.userAddress) ?? '-';
+
+  bool get _isGrouped => widget.order.paymentGroupId != null && widget.order.paymentGroupId != widget.order.id;
 
   Widget _buildCustomerInfo() {
     return Column(
@@ -128,9 +135,30 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
         const Text('Customer Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
         _InfoRow(label: 'Name', value: _displayName),
-        _InfoRow(label: 'Email', value: _displayEmail),
+        if (_displayEmail != null) _InfoRow(label: 'Email', value: _displayEmail!),
         _InfoRow(label: 'Phone', value: _displayPhone),
         _InfoRow(label: 'Address', value: _displayAddress),
+        if (_isGrouped) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withAlpha(20),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.link, size: 14, color: Colors.blue.shade700),
+                const SizedBox(width: 6),
+                Text(
+                  'Split payment group',
+                  style: TextStyle(fontSize: 12, color: Colors.blue.shade700, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

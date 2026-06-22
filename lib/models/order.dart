@@ -19,6 +19,7 @@ class OrderModel {
   final bool shippingCollected;
   final DateTime? shippingCollectedAt;
   final String? shippingCollectedBy;
+  final String? paymentGroupId;
 
   OrderModel({
     required this.id,
@@ -39,6 +40,7 @@ class OrderModel {
     this.shippingCollected = false,
     this.shippingCollectedAt,
     this.shippingCollectedBy,
+    this.paymentGroupId,
   });
 
   static String? _fullName(dynamic firstName, dynamic lastName) {
@@ -72,6 +74,7 @@ class OrderModel {
       shippingCollected: map['shippingCollected'] ?? false,
       shippingCollectedAt: (map['shippingCollectedAt'] as Timestamp?)?.toDate(),
       shippingCollectedBy: map['shippingCollectedBy'],
+      paymentGroupId: map['paymentGroupId'],
     );
   }
 
@@ -94,6 +97,7 @@ class OrderModel {
       'shippingCollected': shippingCollected,
       'shippingCollectedAt': shippingCollectedAt != null ? Timestamp.fromDate(shippingCollectedAt!) : null,
       'shippingCollectedBy': shippingCollectedBy,
+      'paymentGroupId': paymentGroupId,
     };
   }
 }
