@@ -75,6 +75,14 @@ class FirestoreService {
     await _db.collection('orders').doc(orderId).update({'status': status});
   }
 
+  Future<void> markShippingCollected(String orderId, String adminUid) async {
+    await _db.collection('orders').doc(orderId).update({
+      'shippingCollected': true,
+      'shippingCollectedAt': FieldValue.serverTimestamp(),
+      'shippingCollectedBy': adminUid,
+    });
+  }
+
   // --- Discounts ---
   Stream<List<Discount>> getDiscounts() {
     return _db.collection('discounts').snapshots().map((snapshot) =>

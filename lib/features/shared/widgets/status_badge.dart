@@ -24,6 +24,17 @@ class StatusBadge extends StatelessWidget {
     return const StatusBadge(label: 'ACTIVE', color: Colors.green);
   }
 
+  factory StatusBadge.fromShippingPaymentMethod(String method, {bool collected = false}) {
+    if (collected) {
+      return const StatusBadge(label: 'COLLECTED', color: Colors.blue);
+    }
+    return switch (method.toLowerCase()) {
+      'prepaid' => const StatusBadge(label: 'PREPAID', color: Colors.green),
+      'on_delivery' => const StatusBadge(label: 'ON DELIVERY', color: Colors.amber),
+      _ => const StatusBadge(label: 'UNKNOWN', color: Colors.grey),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(

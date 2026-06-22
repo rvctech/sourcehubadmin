@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +21,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
   String _sortBy = 'date';
+  String _shippingFilter = 'all';
 
   int _statusWeight(String status) {
     switch (status.toLowerCase()) {
@@ -46,6 +48,10 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
         userAddress: userData?['address'] as String?,
         onUpdateStatus: (newStatus) async {
           await ref.read(firestoreServiceProvider).updateOrderStatus(order.id, newStatus);
+        },
+        onMarkShippingCollected: () async {
+          final admin = FirebaseAuth.instance.currentUser;
+          await ref.read(firestoreServiceProvider).markShippingCollected(order.id, admin?.uid ?? '');
         },
       ),
     );
@@ -136,6 +142,26 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 isActive: _sortBy == 'status',
                 onTap: () => setState(() => _sortBy = 'status'),
               ),
+              const SizedBox(width: 16),
+              Container(width: 1, height: 24, color: Colors.grey.withValues(alpha: 0.2)),
+              const SizedBox(width: 16),
+              FilterButton(
+                label: 'All',
+                isActive: _shippingFilter == 'all',
+                onTap: () => setState(() => _shippingFilter = 'all'),
+              ),
+              const SizedBox(width: 8),
+              FilterButton(
+                label: 'Shipping Due',
+                isActive: _shippingFilter == 'shipping_due',
+                onTap: () => setState(() => _shippingFilter = 'shipping_due'),
+              ),
+              const SizedBox(width: 8),
+              FilterButton(
+                label: 'Prepaid',
+                isActive: _shippingFilter == 'prepaid',
+                onTap: () => setState(() => _shippingFilter = 'prepaid'),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -154,7 +180,20 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                           final matchesSearch = o.id.toLowerCase().contains(_searchQuery) ||
                               name.contains(_searchQuery) ||
                               email.contains(_searchQuery);
-                          return matchesSearch && o.status.toLowerCase() != 'pending';
+
+                          bool matchesShippingFilter;
+                          switch (_shippingFilter) {
+                            case 'shipping_due':
+                              matchesShippingFilter = o.shippingPaymentMethod == 'on_delivery' && !o.shippingCollected;
+                              break;
+                            case 'prepaid':
+                              matchesShippingFilter = o.shippingPaymentMethod == 'prepaid';
+                              break;
+                            default:
+                              matchesShippingFilter = true;
+                          }
+
+                          return matchesSearch && o.status.toLowerCase() != 'pending' && matchesShippingFilter;
                         }).toList()
                           ..sort((a, b) {
                             if (_sortBy == 'status') {
@@ -198,6 +237,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
           DataColumn(label: Text('Date')),
           DataColumn(label: Text('Customer')),
           DataColumn(label: Text('Total')),
+          DataColumn(label: Text('Shipping')),
           DataColumn(label: Text('Status')),
           DataColumn(label: Text('Actions')),
         ],
@@ -238,6 +278,10 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
               DataCell(Text(
                 'KES ${order.totalPrice.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
+              )),
+              DataCell(StatusBadge.fromShippingPaymentMethod(
+                order.shippingPaymentMethod,
+                collected: order.shippingCollected,
               )),
               DataCell(StatusBadge.fromOrderStatus(order.status)),
               DataCell(OutlinedButton.icon(

@@ -14,6 +14,11 @@ class OrderModel {
   final List<OrderItem> items;
   final String? discountCode;
   final double discountAmount;
+  final double amountPaid;
+  final String shippingPaymentMethod;
+  final bool shippingCollected;
+  final DateTime? shippingCollectedAt;
+  final String? shippingCollectedBy;
 
   OrderModel({
     required this.id,
@@ -29,6 +34,11 @@ class OrderModel {
     required this.items,
     this.discountCode,
     this.discountAmount = 0,
+    this.amountPaid = 0,
+    this.shippingPaymentMethod = 'prepaid',
+    this.shippingCollected = false,
+    this.shippingCollectedAt,
+    this.shippingCollectedBy,
   });
 
   static String? _fullName(dynamic firstName, dynamic lastName) {
@@ -57,6 +67,11 @@ class OrderModel {
       discountCode: map['discountCode'],
       discountAmount: (map['discountAmount'] ?? map['discount'] ?? 0)
           .toDouble(),
+      amountPaid: (map['amountPaid'] ?? map['totalPrice'] ?? 0).toDouble(),
+      shippingPaymentMethod: map['shippingPaymentMethod'] ?? 'prepaid',
+      shippingCollected: map['shippingCollected'] ?? false,
+      shippingCollectedAt: (map['shippingCollectedAt'] as Timestamp?)?.toDate(),
+      shippingCollectedBy: map['shippingCollectedBy'],
     );
   }
 
@@ -74,6 +89,11 @@ class OrderModel {
       'items': items.map((x) => x.toMap()).toList(),
       'discountCode': discountCode,
       'discountAmount': discountAmount,
+      'amountPaid': amountPaid,
+      'shippingPaymentMethod': shippingPaymentMethod,
+      'shippingCollected': shippingCollected,
+      'shippingCollectedAt': shippingCollectedAt != null ? Timestamp.fromDate(shippingCollectedAt!) : null,
+      'shippingCollectedBy': shippingCollectedBy,
     };
   }
 }

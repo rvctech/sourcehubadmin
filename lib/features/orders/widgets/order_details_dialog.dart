@@ -7,6 +7,7 @@ class OrderDetailsDialog extends StatefulWidget {
   final OrderModel order;
   final List<Product> products;
   final Future<void> Function(String status) onUpdateStatus;
+  final Future<void> Function()? onMarkShippingCollected;
   final String? userName;
   final String? userEmail;
   final String? userPhone;
@@ -17,6 +18,7 @@ class OrderDetailsDialog extends StatefulWidget {
     required this.order,
     required this.products,
     required this.onUpdateStatus,
+    this.onMarkShippingCollected,
     this.userName,
     this.userEmail,
     this.userPhone,
@@ -29,6 +31,7 @@ class OrderDetailsDialog extends StatefulWidget {
 
 class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
   late String _selectedStatus;
+  bool _isMarkingCollected = false;
 
   @override
   void initState() {
@@ -82,6 +85,8 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Divider(),
+              if (widget.order.shippingPaymentMethod == 'on_delivery' && !widget.order.shippingCollected)
+                _buildShippingDueBanner(),
               const SizedBox(height: 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,6 +190,9 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
   }
 
   Widget _buildSummary(double subtotal, double deliveryFee, double total) {
+    final amountPaid = widget.order.amountPaid;
+    final dueOnDelivery = total - amountPaid;
+
     return Align(
       alignment: Alignment.centerRight,
       child: SizedBox(
@@ -201,8 +209,85 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
               ),
             const Divider(),
             _SummaryRow(label: 'Total', value: total, isBold: true, fontSize: 18),
+            _SummaryRow(label: 'Amount Paid', value: amountPaid, color: Colors.green),
+            if (widget.order.shippingPaymentMethod == 'on_delivery' && !widget.order.shippingCollected && dueOnDelivery > 0)
+              _SummaryRow(
+                label: 'Due on Delivery',
+                value: dueOnDelivery,
+                color: Colors.amber.shade800,
+                isBold: true,
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildShippingDueBanner() {
+    final dueOnDelivery = widget.order.totalPrice - widget.order.amountPaid;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, size: 18, color: Colors.amber.shade800),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Shipping Payment Due on Delivery',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.amber.shade900,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'KES ${dueOnDelivery.toStringAsFixed(2)} to be collected upon delivery.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (widget.onMarkShippingCollected != null && !_isMarkingCollected)
+            TextButton.icon(
+              onPressed: () async {
+                setState(() => _isMarkingCollected = true);
+                try {
+                  await widget.onMarkShippingCollected!();
+                  if (mounted) setState(() => _isMarkingCollected = false);
+                } catch (_) {
+                  if (mounted) setState(() => _isMarkingCollected = false);
+                }
+              },
+              icon: const Icon(Icons.check_circle_outline, size: 16),
+              label: const Text('Mark Collected'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+            ),
+          if (_isMarkingCollected)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+        ],
       ),
     );
   }
